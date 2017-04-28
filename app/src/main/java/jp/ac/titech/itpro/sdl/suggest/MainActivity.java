@@ -26,15 +26,19 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText inputText;
     private ArrayAdapter<String> resultAdapter;
+    private ArrayList<String> responseList = new ArrayList<>();
+    private final static String KEY_RESPONSE_LIST = "MainActivity.responseList";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         inputText = (EditText)findViewById(R.id.input_text);
         Button suggestButton = (Button)findViewById(R.id.suggest_button);
         ListView resultList = (ListView)findViewById(R.id.result_list);
+
+        if (savedInstanceState != null)
+            responseList = savedInstanceState.getStringArrayList(KEY_RESPONSE_LIST);
 
         suggestButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,6 +78,18 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     });
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putStringArrayList(KEY_RESPONSE_LIST, responseList);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handler.sendMessage(handler.obtainMessage(MSG_RESULT, responseList));
+    }
 
     private class SuggestThread extends Thread {
         private String queryText;
@@ -118,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (result.size() == 0)
                 result.add(getString(R.string.no_suggestions));
+            responseList = result;
             handler.sendMessage(handler.obtainMessage(MSG_RESULT, result));
         }
     }
